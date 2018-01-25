@@ -106,7 +106,6 @@ func main() {
 		// skip IPv6
 		ip := net.ParseIP(ip_addr)
 		if ip == nil || ip.To4() == nil {
-			fmt.Printf("skip non-IPv4:%s\n", ip_addr)
 			continue
 		}
 
