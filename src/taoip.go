@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -42,8 +43,8 @@ type TaobaoIP struct {
 func usage(code int) {
 	fmt.Printf(
 		`taoip %s 
-taoip: query IP description from taobao
-Usage: taoip IP
+taoip: query IPv4 description from taobao
+Usage: taoip HostName
 `, VERSION)
 	os.Exit(code)
 }
@@ -94,17 +95,33 @@ func main() {
 	}
 
 	ip_str := os.Args[1]
-	ip_desc, err := queryIPFromTaobao(ip_str)
+	ns, err := net.LookupHost(ip_str)
 	if err != nil {
+		fmt.Printf("taoip: %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	fmt.Printf("%s [%s--%s--%s--%s--%s]\n",
-		ip_str,
-		ip_desc.Country,
-		ip_desc.Region,
-		ip_desc.City,
-		ip_desc.County,
-		ip_desc.Isp)
+	fmt.Printf("%s:\n", ip_str)
+	for _, ip_addr := range ns {
+		// skip IPv6
+		ip := net.ParseIP(ip_addr)
+		if ip == nil || ip.To4() == nil {
+			fmt.Printf("skip non-IPv4:%s\n", ip_addr)
+			continue
+		}
+
+		ip_desc, err := queryIPFromTaobao(ip_addr)
+		if err != nil {
+			os.Exit(1)
+		}
+
+		fmt.Printf("\t%s [%s--%s--%s--%s--%s]\n",
+			ip_addr,
+			ip_desc.Country,
+			ip_desc.Region,
+			ip_desc.City,
+			ip_desc.County,
+			ip_desc.Isp)
+	}
 
 }
