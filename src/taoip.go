@@ -105,6 +105,10 @@ func main() {
 	for _, ip_addr := range ns {
 		// skip IPv6
 		ip := net.ParseIP(ip_addr)
+
+		// validation of IPv4-mapped IPv6 addresses
+		//  ::ffff:c0a8:101 are marked as invalid IPv6 addresses and valid IPv4 addresses
+		// https://github.com/asaskevich/govalidator/pull/100
 		if ip == nil || ip.To4() == nil {
 			continue
 		}
